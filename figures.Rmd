@@ -1,0 +1,101 @@
+---
+title: "figures"
+output: html_document
+---
+
+
+```{r}
+library(tidyverse)
+library(ggplot2)
+
+gpa_data <- tibble(
+  predictor = c("Academic Average", "Biology", "Carving Dexterity", "Chemistry",
+                "Factual Science", "Inorganic Chemistry", "Manual Average",
+                "Organic Chemistry", "PAT", "Quantitative Reasoning",
+                "Reading Comprehension", "Science Application",
+                "Space Relations", "Total Science"),
+  r = c(.41, .33, .19, .28, .27, .33, .27, .28, .19, .21, .29, .20, .20, .40),
+  lower = c(.38, .29, -.07, .08, .11, .30, .10, .25, .16, .18, .24, .04, .04, .37),
+  upper = c(.44, .37, .45, .48, .43, .36, .44, .31, .22, .24, .34, .36, .36, .43),
+  k = c(7, 5, 3, 3, 3, 2, 3, 2, 4, 5, 5, 3, 3, 5),
+  N = c(4438, 3928, 136, 136, 136, 3792, 136, 3792, 4302, 3928, 3928, 136, 136, 3928),
+  outcome = "First Year GPA"
+)
+
+didactic_data <- tibble(
+  predictor = c("Academic Average", "Biology", "Carving Dexterity", "Chemistry",
+                "Factual Science", "PAT", "Quantitative Reasoning",
+                "Reading Comprehension", "Science Application", "Space Relations", "Total Science"),
+  r = c(.17, .12, -.05, .17, .17, .04, .05, .12, .15, -.01, .18),
+  lower = c(.09, .00, -.24, .05, .05, -.08, -.11, .00, .03, -.13, .10),
+  upper = c(.25, .24, .14, .29, .29, .16, .21, .24, .27, .11, .26),
+  k = c(4, 2, 2, 2, 2, 2, 2, 2, 2, 2, 4),
+  N = c(517, 266, 266, 266, 266, 256, 266, 266, 266, 266, 522),
+  outcome = "Didactic Course Grades"
+)
+
+my_data <- bind_rows(gpa_data, didactic_data)
+
+# Factor levels: GPA predictors in order (didactic-only predictors drop to bottom)
+all_predictors <- unique(gpa_data$predictor)
+didactic_only <- setdiff(unique(didactic_data$predictor), all_predictors)
+level_order <- rev(c(all_predictors, didactic_only))
+
+my_data$predictor <- factor(my_data$predictor, levels = level_order)
+
+# Use a fixed x position for ALL annotation text so they align in a clean column
+LABEL_X <- 0.72  # Adjust this value left/right to taste
+
+pd <- position_dodge(width = 0.7)
+
+p <- ggplot(my_data, aes(x = r, y = predictor, color = outcome)) +
+  geom_errorbarh(aes(xmin = lower, xmax = upper),
+                 position = pd,
+                 height = 0.3,
+                 linewidth = 0.8) +
+  geom_point(position = pd, size = 3) +
+  geom_vline(xintercept = 0, linetype = "dotted", color = "grey40") +
+  
+  # Fixed x position so labels don't scatter with CI width
+  geom_text(aes(x = LABEL_X,
+                label = paste0("k=", k, ", N=", N)),
+            position = pd,
+            hjust = 0,
+            size = 2.9,
+            show.legend = FALSE) +
+  
+  scale_color_manual(
+    values = c("First Year GPA" = "#2c7bb6", "Didactic Course Grades" = "#d7191c")
+  ) +
+  
+  scale_x_continuous(
+    name = "Meta-Analytic Correlation (r)",
+    limits = c(-0.3, 1.05),
+    breaks = seq(-0.2, 0.6, by = 0.2),
+    expand = c(0, 0)
+  ) +
+  
+  labs(
+    title = "Predictive Validity of DAT Subsections for Dental School Academic Performance",
+    y = NULL,  # y-axis label is self-evident from the predictor names
+    color = "Outcome"
+  ) +
+  
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid.major.y = element_line(color = "grey92", linewidth = 0.4),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_line(color = "grey92", linewidth = 0.4),
+    legend.position = "bottom",
+    legend.title = element_text(face = "bold"),
+    plot.title = element_text(size = 12, face = "bold", margin = margin(b = 12)),
+    axis.text.y = element_text(size = 10),
+    plot.margin = margin(15, 20, 15, 15)
+  )
+
+# Save with explicit height/width — this is the most important fix for squishing
+ggsave("forest_plot.png", plot = p,
+       width = 10, height = 8.5, dpi = 300, bg = "white")
+```
+
+
