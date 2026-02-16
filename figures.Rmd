@@ -3,23 +3,22 @@ title: "figures"
 output: html_document
 ---
 
-
+## Forest Plot with Didactic and Pre-Clinical Course Grades
 ```{r}
 library(tidyverse)
 library(ggplot2)
 
-gpa_data <- tibble(
+preclinical_data <- tibble(
   predictor = c("Academic Average", "Biology", "Carving Dexterity", "Chemistry",
-                "Factual Science", "Inorganic Chemistry", "Manual Average",
-                "Organic Chemistry", "PAT", "Quantitative Reasoning",
-                "Reading Comprehension", "Science Application",
+                "Factual Science", "Mechanical Aptitude", "PAT",
+                "Quantitative Reasoning", "Reading Comprehension", "Science Application",
                 "Space Relations", "Total Science"),
-  r = c(.41, .33, .19, .28, .27, .33, .27, .28, .19, .21, .29, .20, .20, .40),
-  lower = c(.38, .29, -.07, .08, .11, .30, .10, .25, .16, .18, .24, .04, .04, .37),
-  upper = c(.44, .37, .45, .48, .43, .36, .44, .31, .22, .24, .34, .36, .36, .43),
-  k = c(7, 5, 3, 3, 3, 2, 3, 2, 4, 5, 5, 3, 3, 5),
-  N = c(4438, 3928, 136, 136, 136, 3792, 136, 3792, 4302, 3928, 3928, 136, 136, 3928),
-  outcome = "First Year GPA"
+  r = c(.06, .00, .22, .09, .03, .41, .37, .07, .12, .06, .26, .08),
+  lower = c(-.01, -.12, .06, -.03, -.09, .27, .25, -.05, .00, -.06, .15, -.01),
+  upper = c(.13, .12, .38, .21, .15, .55, .49, .19, .24, .18, .37, .17),
+  k = c(9, 2, 2, 2, 2, 5, 3, 2, 2, 2, 2, 4),
+  N = c(731, 266, 266, 266, 266, 165, 433, 266, 266, 266, 266, 522),
+  outcome = "Pre-Clinical Course Grades"
 )
 
 didactic_data <- tibble(
@@ -34,10 +33,10 @@ didactic_data <- tibble(
   outcome = "Didactic Course Grades"
 )
 
-my_data <- bind_rows(gpa_data, didactic_data)
+my_data <- bind_rows(preclinical_data, didactic_data)
 
 # Factor levels: GPA predictors in order (didactic-only predictors drop to bottom)
-all_predictors <- unique(gpa_data$predictor)
+all_predictors <- unique(preclinical_data$predictor)
 didactic_only <- setdiff(unique(didactic_data$predictor), all_predictors)
 level_order <- rev(c(all_predictors, didactic_only))
 
@@ -65,7 +64,7 @@ p <- ggplot(my_data, aes(x = r, y = predictor, color = outcome)) +
             show.legend = FALSE) +
   
   scale_color_manual(
-    values = c("First Year GPA" = "#2c7bb6", "Didactic Course Grades" = "#d7191c")
+    values = c("Pre-Clinical Course Grades" = "#2c7bb6", "Didactic Course Grades" = "#d7191c")
   ) +
   
   scale_x_continuous(
@@ -98,4 +97,75 @@ ggsave("forest_plot.png", plot = p,
        width = 10, height = 8.5, dpi = 300, bg = "white")
 ```
 
+## Forest Plot with just Didactic Course Grades
+```{r}
+library(tidyverse)
+library(ggplot2)
+
+preclinical_data <- tibble(
+  predictor = c("Academic Average", "Biology", "Carving Dexterity", "Chemistry",
+                "Factual Science", "Mechanical Aptitude", "PAT",
+                "Quantitative Reasoning", "Reading Comprehension", "Science Application",
+                "Space Relations", "Total Science"),
+  r = c(.06, .00, .22, .09, .03, .41, .37, .07, .12, .06, .26, .08),
+  lower = c(-.01, -.12, .06, -.03, -.09, .27, .25, -.05, .00, -.06, .15, -.01),
+  upper = c(.13, .12, .38, .21, .15, .55, .49, .19, .24, .18, .37, .17),
+  k = c(9, 2, 2, 2, 2, 5, 3, 2, 2, 2, 2, 4),
+  N = c(731, 266, 266, 266, 266, 165, 433, 266, 266, 266, 266, 522)
+)
+
+# Order predictors top-to-bottom
+preclinical_data$predictor <- factor(
+  preclinical_data$predictor,
+  levels = rev(preclinical_data$predictor)
+)
+
+LABEL_X <- 0.72  # fixed position for k/N labels
+
+p <- ggplot(preclinical_data, aes(x = r, y = predictor)) +
+  
+  geom_errorbarh(aes(xmin = lower, xmax = upper),
+                 height = 0.3,
+                 linewidth = 0.8,
+                 color = "#2c7bb6") +
+  
+  geom_point(size = 3,
+             color = "#2c7bb6") +
+  
+  geom_vline(xintercept = 0,
+             linetype = "dotted",
+             color = "grey40") +
+  
+  geom_text(aes(x = LABEL_X,
+                label = paste0("k=", k, ", N=", N)),
+            hjust = 0,
+            size = 3) +
+  
+  scale_x_continuous(
+    name = "Meta-Analytic Correlation (r)",
+    limits = c(-0.3, 1.05),
+    breaks = seq(-0.2, 0.6, by = 0.2),
+    expand = c(0, 0)
+  ) +
+  
+  labs(
+    title = "Predictive Validity of DAT Subsections for Pre-Clinical Course Grades",
+    y = NULL
+  ) +
+  
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid.major.y = element_line(color = "grey92", linewidth = 0.4),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_line(color = "grey92", linewidth = 0.4),
+    plot.title = element_text(size = 12, face = "bold", margin = margin(b = 12)),
+    axis.text.y = element_text(size = 10),
+    plot.margin = margin(15, 20, 15, 15)
+  )
+
+ggsave("preclinical_forest_plot.png",
+       plot = p,
+       width = 10, height = 8.5, dpi = 300, bg = "white")
+
+```
 
