@@ -169,3 +169,80 @@ ggsave("preclinical_forest_plot.png",
 
 ```
 
+
+
+## Forest Plot with just GPA Y1
+```{r}
+library(tidyverse)
+library(ggplot2)
+
+y1gpa_data <- tibble(
+  predictor = c("Academic Average", "Biology", "Carving Dexterity", "Chemistry",
+                "Factual Science", "Inorganic Chemistry", "Manual Average",
+                "Organic Chemistry", "PAT", "Quantitative Reasoning",
+                "Reading Comprehension", "Science Application",
+                "Space Relations",
+                "Total Science"),
+  r = c(.41, .33, .19, .28, .27, .33, .27, .28, .19, .21, .29, .20, .20, .40),
+  lower = c(.38, .29, -.07, .08, .11, .30, .10, .25, .16, .18, .24, .04, .04, .37),
+  upper = c(.44, .37, .45, .48, .43, .36, .44, .31, .22, .24, .34, .36, .36, .43),
+  k = c(7, 5, 3, 3, 3, 2, 3, 2, 4, 5, 5, 3, 3, 5),
+  N = c(4438, 3928, 136, 136, 136, 3792, 136, 3792, 4302, 3928, 3928, 136, 136, 3928)
+)
+
+# Order predictors top-to-bottom
+y1gpa_data$predictor <- factor(
+  y1gpa_data$predictor,
+  levels = rev(y1gpa_data$predictor)
+)
+
+LABEL_X <- 0.72  # fixed position for k/N labels
+
+p <- ggplot(y1gpa_data, aes(x = r, y = predictor)) +
+  
+  geom_errorbarh(aes(xmin = lower, xmax = upper),
+                 height = 0.3,
+                 linewidth = 0.8,
+                 color = "#2c7bb6") +
+  
+  geom_point(size = 3,
+             color = "#2c7bb6") +
+  
+  geom_vline(xintercept = 0,
+             linetype = "dotted",
+             color = "grey40") +
+  
+  geom_text(aes(x = LABEL_X,
+                label = paste0("k=", k, ", N=", N)),
+            hjust = 0,
+            size = 3) +
+  
+  scale_x_continuous(
+    name = "Meta-Analytic Correlation (r)",
+    limits = c(-0.3, 1.05),
+    breaks = seq(-0.2, 0.6, by = 0.2),
+    expand = c(0, 0)
+  ) +
+  
+  labs(
+    title = "Predictive Validity of DAT Subsections for GPA Year 1",
+    y = NULL
+  ) +
+  
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid.major.y = element_line(color = "grey92", linewidth = 0.4),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_line(color = "grey92", linewidth = 0.4),
+    plot.title = element_text(size = 12, face = "bold", margin = margin(b = 12)),
+    axis.text.y = element_text(size = 10),
+    plot.margin = margin(15, 20, 15, 15)
+  )
+
+ggsave("y1gpa_forest_plot.png",
+       plot = p,
+       width = 10, height = 8.5, dpi = 300, bg = "white")
+
+```
+
+
