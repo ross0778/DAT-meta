@@ -5,8 +5,100 @@ output: html_document
 
 
 ```{r}
+library(tidyverse)
+library(ggplot2)
+
 # ══════════════════════════════════════════════════════════════════════════════
-# PLOT 1: DIDACTIC + PRE-CLINICAL COMBINED
+# FIRST YEAR GPA DATA
+# ══════════════════════════════════════════════════════════════════════════════
+
+# ── GPA data (Observed) ───────────────────────────────────────────────────────
+gpa_data <- tibble(
+  predictor = c("Academic Average", "Biology", "Carving Dexterity", "Chemistry",
+                "Factual Science", "Inorganic Chemistry", "Manual Average",
+                "Organic Chemistry", "PAT", "Quantitative Reasoning",
+                "Reading Comprehension", "Science Application",
+                "Space Relations", "Total Science"),
+  r     = c( .41,  .33,  .19,  .28,  .27,  .33,  .27,  .28,  .19,  .21,  .29,  .20,  .20,  .40),
+  lower = c( .38,  .29, -.07,  .08,  .11,  .30,  .10,  .25,  .16,  .18,  .24,  .04,  .04,  .37),
+  upper = c( .44,  .37,  .45,  .48,  .43,  .36,  .44,  .31,  .22,  .24,  .34,  .36,  .36,  .43),
+  k     = c(   7,    5,    3,    3,    3,    2,    3,    2,    4,    5,    5,    3,    3,    5),
+  N     = c(4438, 3928,  136,  136,  136, 3792,  136, 3792, 4302, 3928, 3928,  136,  136, 3928),
+  outcome = "First Year GPA",
+  correction = "Observed"
+)
+
+# ── GPA Range Corrected (ONLY for predictors with corrections) ────────────────
+gpa_corrected <- tibble(
+  predictor = c("Academic Average", "Biology", "Chemistry", "PAT", "Quantitative Reasoning", "Reading Comprehension"),
+  r     = c( .60, .46, .36, .25, .31, .37),
+  lower = c( .38, .29, .08, .16, .18, .24),
+  upper = c( .44, .37, .48, .22, .24, .34),
+  k     = c(7,5,3,4,5,5),
+  N     = c(4438, 3928, 136, 4302, 3928, 3928),
+  outcome = "First Year GPA",
+  correction = "Corrected for Range Restriction"
+)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# DIDACTIC COURSE GRADES DATA
+# ══════════════════════════════════════════════════════════════════════════════
+
+didactic_data <- tibble(
+  predictor = c("Academic Average", "Biology", "Carving Dexterity", "Chemistry",
+                "Factual Science", "PAT", "Quantitative Reasoning",
+                "Reading Comprehension", "Science Application",
+                "Space Relations", "Total Science"),
+  r     = c( .17,  .12, -.05,  .17,  .17,  .04,  .05,  .12,  .15, -.01,  .18),
+  lower = c( .09,  .00, -.24,  .05,  .05, -.08, -.11,  .00,  .03, -.13,  .10),
+  upper = c( .25,  .24,  .14,  .29,  .29,  .16,  .21,  .24,  .27,  .11,  .26),
+  k     = c(   4,    2,    2,    2,    2,    2,    2,    2,    2,    2,    4),
+  N     = c( 517,  266,  266,  266,  266,  256,  266,  266,  266,  266,  522),
+  outcome = "Didactic Course Grades",
+  correction = "Observed"
+)
+
+didactic_corrected <- tibble(
+  predictor = c("Academic Average", "Biology", "Chemistry", "PAT", "Quantitative Reasoning", "Reading Comprehension"),
+  r     = c(.27, .17, .25, .05, .07, .16),
+  lower = c(.09, .00, .05, -.08, -.11, .00),
+  upper = c(.25, .24, .29, -.08, -.11, .00),
+  k     = c(4, 2, 2, 2, 2, 2),
+  N     = c(517, 266, 266, 266, 266, 266),
+  outcome = "Didactic Course Grades",
+  correction = "Corrected for Range Restriction"
+)
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PRE-CLINICAL COURSE GRADES DATA
+# ══════════════════════════════════════════════════════════════════════════════
+
+preclinical_data <- tibble(
+  predictor = c("Academic Average", "Biology", "Carving Dexterity", "Chemistry", "Factual Science", "Mechanical Aptitude", "PAT", "Quantitative Reasoning", "Reading Comprehension", "Science Application", "Space Relations", "Total Science"),
+  r     = c(.06, .00, .22, .09, .03, .41, .37, .07, .12, .06, .26, .08),
+  lower = c(-.01, -.12, .06, -.03, -.09, .27, .25, -.05, .00, -.06, .15, -.01),
+  upper = c(.13, .12, .38, .21, .15, .55, .49, .19, .24, .18, .37, .17),
+  k     = c(9, 2, 2, 2, 2, 5, 3, 2, 2, 2, 2, 4),
+  N     = c(731, 266, 266, 266, 266, 165, 433, 266, 266, 266, 266, 522),
+  outcome = "Pre-Clinical Course Grades",
+  correction = "Observed"
+)
+
+preclinical_corrected <- tibble(
+  predictor = c("Academic Average", "Biology", "Chemistry", "PAT", "Quantitative Reasoning", "Reading Comprehension"),
+  r     = c(.09, .00, .13, .53, .11, .16),
+  lower = c(-.01, -.12, -.03, .25, -.05, .00),
+  upper = c(.13, .12, .21, .49, .19, .24),
+  k     = c(9,2,2,3,2,2),
+  N     = c(731,266,266,433,266,266),
+  outcome = "Pre-Clinical Course Grades",
+  correction = "Corrected for Range Restriction"
+)
+
+
+
+# ══════════════════════════════════════════════════════════════════════════════
+# PLOT: DIDACTIC + PRE-CLINICAL COMBINED
 # ══════════════════════════════════════════════════════════════════════════════
 
 didactic_preclinical_data <- bind_rows(didactic_data, didactic_corrected, 
@@ -18,8 +110,14 @@ level_order_dp <- rev(all_predictors_dp)
 didactic_preclinical_data$predictor <- factor(didactic_preclinical_data$predictor, 
                                               levels = level_order_dp)
 
+# Small horizontal offset for corrected estimates
+didactic_preclinical_data <- didactic_preclinical_data %>%
+  mutate(r_plot = ifelse(correction == "Corrected for Range Restriction",
+                         r + 0.015,   # slight horizontal offset
+                         r))
+
 p_didactic_preclinical <- ggplot(didactic_preclinical_data,
-                                 aes(x = r, y = predictor, color = outcome)) +
+                                 aes(x = r_plot, y = predictor, color = outcome)) +
   
   # CI drawn ONCE (Observed only)
   geom_errorbarh(
@@ -29,14 +127,14 @@ p_didactic_preclinical <- ggplot(didactic_preclinical_data,
     linewidth = 0.8
   ) +
   
-  # Points (Observed + Corrected on same line)
+  # Points (Observed + horizontally offset Corrected)
   geom_point(aes(shape = correction), size = 3) +
   
   geom_vline(xintercept = 0, linetype = "dotted", color = "grey40") +
   
   geom_text(
     data = filter(didactic_preclinical_data, correction == "Observed"),
-    aes(label = paste0("k=", k, ", N=", formatC(N, format = "d", big.mark = ","))),
+    aes(x = r, label = paste0("k=", k, ", N=", formatC(N, format = "d", big.mark = ","))),
     hjust = 0.5,
     vjust = -1.5,
     size = 2.5,
@@ -67,11 +165,26 @@ p_didactic_preclinical <- ggplot(didactic_preclinical_data,
     color = "Outcome"
   ) +
   
-  theme_minimal(base_size = 12)
+  theme_minimal(base_size = 12) +
+  theme(
+    panel.grid.major.y = element_line(color = "grey92", linewidth = 0.4),
+    panel.grid.minor = element_blank(),
+    panel.grid.major.x = element_line(color = "grey92", linewidth = 0.4),
+    legend.position = "bottom",
+    legend.box = "horizontal",
+    legend.title = element_text(face = "bold"),
+    plot.title = element_text(size = 12, face = "bold", margin = margin(b = 12)),
+    axis.text.y = element_text(size = 10),
+    plot.margin = margin(15, 30, 15, 15)
+  ) +
+  
+  guides(
+    color = guide_legend(order = 1),
+    shape = guide_legend(order = 2)
+  )
 
 ggsave("forest_plot_didactic_preclinical.png", plot = p_didactic_preclinical,
        width = 11, height = 9, dpi = 300, bg = "white")
-
 
 # ══════════════════════════════════════════════════════════════════════════════
 # PLOT 2: DIDACTIC ONLY
