@@ -361,3 +361,60 @@ ggsave("forest_plot_preclinical.png", plot = p_preclinical,
 
 ```
 
+
+# New GPA Y1 Graph for SIOP poster with legend moved to the left, nothing else changed:
+```{r}
+gpa_only_data <- bind_rows(gpa_data, gpa_corrected)
+gpa_only_data$predictor <- factor(gpa_only_data$predictor,
+                                  levels = rev(unique(gpa_data$predictor)))
+p_gpa <- ggplot(gpa_only_data,
+                aes(x = r, y = predictor)) +
+  
+  geom_errorbarh(
+    data = filter(gpa_only_data, correction == "Observed"),
+    aes(xmin = lower, xmax = upper),
+    height = 0.3,
+    linewidth = 0.8,
+    color = "#2c7bb6"
+  ) +
+  
+  geom_point(aes(shape = correction),
+             size = 3,
+             color = "#2c7bb6") +
+  
+  geom_vline(xintercept = 0, linetype = "dotted", color = "grey40") +
+  
+  geom_text(
+    data = filter(gpa_only_data, correction == "Observed"),
+    aes(label = paste0("k=", k, ", N=", formatC(N, format = "d", big.mark = ","))),
+    hjust = 0.5,
+    vjust = -1.5,
+    size = 2.9,
+    show.legend = FALSE
+  ) +
+  
+  scale_shape_manual(
+    values = c("Observed" = 16,
+               "Corrected for Range Restriction" = 17),
+    name = "Estimate Type"
+  ) +
+  
+  scale_x_continuous(
+    name = "Meta-Analytic Correlation (r)",
+    limits = c(-0.3, 1.05),
+    breaks = seq(-0.2, 0.6, by = 0.2),
+    expand = c(0, 0)
+  ) +
+  
+  labs(
+    title = "Predictive Validity of DAT Subsections for First Year GPA",
+    y = NULL
+  ) +
+  
+  theme_minimal(base_size = 12) +
+  theme(legend.position = c(0.78, 0.15))
+
+ggsave("forest_plot_gpa_poster.png", plot = p_gpa,
+       width = 10, height = 8.5, dpi = 300, bg = "white")
+```
+
